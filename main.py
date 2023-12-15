@@ -21,3 +21,20 @@ async def on_member_join(member):
         await bot.get_guild(ID_DISC).get_channel(ID_BOASVINDAS).send(
             clans.boas_vindas(member.mention)
         )
+
+@bot.event
+async def on_ready():
+    await bot.change_presence(activity = discord.Game(name = 'em mundo BR.'))
+    print(f'>> {bot.user} on-line!')
+
+@bot.event
+async def on_message(message):            
+    if message.author.bot:
+        return
+
+    if not message.author.guild_permissions.administrator:
+        return
+
+    await bot.process_commands(message)
+
+bot.run(clans.token)
