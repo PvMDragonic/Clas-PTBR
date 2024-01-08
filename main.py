@@ -1,10 +1,12 @@
 from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
+from threading import Thread
+from asyncio import sleep
 import discord
 
 from dados import Servidor
-from usuarios import buscar_clan
+from usuarios import buscar_clan, atualizar_cargos
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -19,6 +21,11 @@ ID_BOASVINDAS = 375701166614380555
 
 # Lista de pessoas com resposta pendente sobre vivar representante em votações.
 para_votar = set()
+
+async def loop_semanal():
+    while True:
+        await sleep(604800) # Uma semana.
+        await atualizar_cargos(bot, ID_DISC)
 
 async def validar_nome(message):
     # Nomes no rune só vão até 12 caracteres.
@@ -90,6 +97,9 @@ async def on_ready():
     await bot.change_presence(activity = discord.Game(name = 'em mundo BR.'))
     print(f'>> {bot.user} on-line!')
 
+    # Deixar aqui rodando eternamente.
+    await loop_semanal()
+
 @bot.event
 async def on_message(message):            
     if message.author.bot:
@@ -115,4 +125,5 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-bot.run(clans.token)
+if __name__ == '__main__':
+    bot.run(clans.token)
