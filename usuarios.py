@@ -59,7 +59,8 @@ async def atualizar_cargos(bot: commands.Bot, id_disc: int) -> list[str]:
             ]
         )
 
-    membros_sv = [member for member in bot.get_guild(id_disc).members]
+    clans_disc = bot.get_guild(id_disc)
+    membros_sv = [member for member in clans_disc.members]
     membro_encontrado = False
 
     for membro in membros_sv:
@@ -76,16 +77,16 @@ async def atualizar_cargos(bot: commands.Bot, id_disc: int) -> list[str]:
                 if clan_nome in [role.name for role in membro.roles]:
                     continue
 
-                # O cargo da pessoa não existe no servidor.
                 cargo_clan = utils.get(bot.guild.roles, name = clan_nome)
                 if not cargo_clan:
-                    falhado.append(nome_sv)
-                    continue
-                
-                # O cargo do clã fica sempre em último na lista de cargos da pessoa.
-                cargo_a_remover = min(membro.roles, key = lambda role: role.position)
-                await membro.remove_roles(cargo_a_remover)
-                await membro.add_roles(cargo_clan)
+                    cargo_clan = await clans_disc.create_role(name = clan)
+                    await membro.add_roles(cargo_clan)
+                else:
+                    # O cargo do clã fica sempre em último na lista de cargos da pessoa.
+                    cargo_a_remover = min(membro.roles, key = lambda role: role.position)
+                    await membro.remove_roles(cargo_a_remover)
+                    await membro.add_roles(cargo_clan)
+
                 membro_encontrado = True
                 break
 
