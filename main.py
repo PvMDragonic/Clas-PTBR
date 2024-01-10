@@ -1,7 +1,6 @@
 from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
-from threading import Thread
 from asyncio import sleep
 import discord
 
@@ -14,7 +13,7 @@ intents.members = True
 intents.roles = True
 bot = commands.Bot(command_prefix = commands.when_mentioned, intents = intents)    
 
-clans = Servidor()
+config_disc = Servidor()
 
 ID_DISC = 375656099321479170
 ID_BOASVINDAS = 375701166614380555
@@ -25,7 +24,9 @@ para_votar = set()
 async def loop_semanal():
     while True:
         await sleep(604800) # Uma semana.
-        await atualizar_cargos(bot, ID_DISC)
+        sem_atualizar = await atualizar_cargos(bot, ID_DISC)
+        config_disc.sem_atualizar = sem_atualizar
+        config_disc.salvar_dados()
 
 async def validar_nome(message):
     # Nomes no rune só vão até 12 caracteres.
@@ -34,7 +35,7 @@ async def validar_nome(message):
     
     AUTOR = message.author
 
-    # Pessoa já tem cargo(s), logo, não precisa receber de novo.
+    # Pessoa já tem cargo(s), então não precisa receber de novo.
     if AUTOR.user.roles:
         return
     
@@ -85,11 +86,18 @@ async def validar_nome(message):
 
     await AUTOR.edit(nick = message.content)
 
+@bot.command()
+async def membros(ctx):
+    nomes = '\n'.join(config_disc.sem_atualizar)
+    await ctx.message.channel.send(
+        f"A seguir estão o(s) nome(s) daquele(s) cujo cargo de clã está(ão) errado(s) {ctx.message.author.mention}:\n\n{nomes}"
+    )
+
 @bot.event
 async def on_member_join(member):
-    if clans.enviar_boas_vindas:
+    if config_disc.enviar_boas_vindas:
         await bot.get_guild(ID_DISC).get_channel(ID_BOASVINDAS).send(
-            clans.boas_vindas(member.mention)
+            config_disc.boas_vindas(member.mention)
         )
 
 @bot.event
@@ -126,4 +134,4 @@ async def on_message(message):
     await bot.process_commands(message)
 
 if __name__ == '__main__':
-    bot.run(clans.token)
+    bot.run(config_disc.token)
