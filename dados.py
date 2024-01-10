@@ -9,6 +9,7 @@ class Servidor():
         except FileNotFoundError:
             self.msg_bem_vindos = ""
             self.sem_atualizar = []
+            self.tempo_loop = 0
 
     def salvar_dados(self): 
         with open('dados.json', 'w') as arqv:

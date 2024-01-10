@@ -1,6 +1,7 @@
 from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
+from datetime import datetime
 from asyncio import sleep
 import discord
 
@@ -14,18 +15,16 @@ intents.roles = True
 bot = commands.Bot(command_prefix = commands.when_mentioned, intents = intents)    
 
 config_disc = Servidor()
+para_votar = set()
 
 ID_DISC = 375656099321479170
 ID_BOASVINDAS = 375701166614380555
 
-# Lista de pessoas com resposta pendente sobre vivar representante em votações.
-para_votar = set()
-
-async def loop_semanal():
+async def loop_semanal(tempo: int):
     while True:
-        await sleep(604800) # Uma semana.
-        sem_atualizar = await atualizar_cargos(bot, ID_DISC)
-        config_disc.sem_atualizar = sem_atualizar
+        await sleep(tempo)
+        config_disc.sem_atualizar = await atualizar_cargos(bot, ID_DISC)
+        config_disc.tempo_loop = tempo = int(datetime.timestamp(datetime.now()))
         config_disc.salvar_dados()
 
 async def validar_nome(message):
@@ -74,8 +73,8 @@ async def validar_nome(message):
 
     membros_mesmo_clan = [member for member in DISC_CLANS.members if cargo_clan in member.roles]
     cargo_votar = await DISC_CLANS.get_role(721503125822898226)
-    para_votar = [member for member in membros_mesmo_clan if discord.utils.get(member.roles, name = cargo_votar)]
-    if not para_votar:
+    pessoa_para_votar = [member for member in membros_mesmo_clan if discord.utils.get(member.roles, name = cargo_votar)]
+    if not pessoa_para_votar:
         para_votar.add(AUTOR)
         await message.channel.send(
             f'Não há ninguém responsável por participar de votações em nome de seu clã, {AUTOR.mention}. Você gostaria de ser o responsável? Responda "Sim" para confirmar. '
@@ -105,8 +104,18 @@ async def on_ready():
     await bot.change_presence(activity = discord.Game(name = 'em mundo BR.'))
     print(f'>> {bot.user} on-line!')
 
+    unix_atual = int(datetime.timestamp(datetime.now()))
+    if config_disc.tempo_loop == 0:
+        config_disc.tempo_loop = restante = unix_atual
+    else:
+        config_disc.tempo_loop = unix_atual
+        tempo_passado = unix_atual - config_disc.tempo_loop
+        restante = 604800 - tempo_passado
+
+    config_disc.salvar_dados()
+
     # Deixar aqui rodando eternamente.
-    await loop_semanal()
+    await loop_semanal(restante)
 
 @bot.event
 async def on_message(message):            
