@@ -85,6 +85,24 @@ async def validar_nome(message):
 
     await AUTOR.edit(nick = message.content)
 
+async def enviar_comandos(message):
+    embed = discord.Embed(
+        title = "COMANDOS CLÃS PT-BR",
+        description = "Lista de comandos do bot.\n\n᲼᲼",
+        color = 0x7a8ff5
+    )
+
+    comandos = [
+        ("@Clãs PT-BR membros", "O bot envia uma lista com os nomes daqueles que estão com o cargo de clã incorreto, seja porque mudaram de clã ou de nome.\n᲼᲼"),
+    ]
+
+    for cmd, descricao in comandos:
+        embed.add_field(name = cmd, value = descricao, inline = False)
+
+    embed.set_footer(text = "OBS.: Não usar [ ] nos comandos; é apenas para demonstração.")
+
+    await message.author.send(embed = embed)
+
 @bot.command()
 async def membros(ctx):
     nomes = '\n'.join(config_disc.sem_atualizar)
@@ -98,6 +116,14 @@ async def on_member_join(member):
         await bot.get_guild(ID_DISC).get_channel(ID_BOASVINDAS).send(
             config_disc.boas_vindas(member.mention)
         )
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, CommandNotFound):
+        return await ctx.message.channel.send(
+            f"Esse comando não existe! {ctx.message.author.mention}"
+        )
+    raise error
 
 @bot.event
 async def on_ready():
@@ -139,6 +165,9 @@ async def on_message(message):
                 )
         else:
             await validar_nome(message)
+
+    if message.content == '<@1196492724526923786>':
+        return await enviar_comandos(message)
 
     await bot.process_commands(message)
 
