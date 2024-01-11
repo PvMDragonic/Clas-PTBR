@@ -2,7 +2,11 @@ from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
 from datetime import datetime
+<<<<<<< HEAD
 from asyncio import sleep
+=======
+from time import sleep
+>>>>>>> 018db68 (Correções menores.)
 import discord
 
 from dados import Servidor
@@ -11,7 +15,6 @@ from usuarios import buscar_clan, atualizar_cargos
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-intents.roles = True
 bot = commands.Bot(command_prefix = commands.when_mentioned, intents = intents)    
 
 config_disc = Servidor()
@@ -99,9 +102,9 @@ async def enviar_comandos(message):
     for cmd, descricao in comandos:
         embed.add_field(name = cmd, value = descricao, inline = False)
 
-    embed.set_footer(text = "OBS.: Não usar [ ] nos comandos; é apenas para demonstração.")
+    embed.set_footer(text = "OBS.: Não usar [ ] nos comandos; é apenas para demonstrar os parâmetros.")
 
-    await message.author.send(embed = embed)
+    await message.channel.send(embed = embed)
 
 @bot.command()
 async def membros(ctx):

@@ -10,6 +10,8 @@ class Servidor():
             self.msg_bem_vindos = ""
             self.sem_atualizar = []
             self.tempo_loop = 0
+            self.token = ""
+            self.salvar_dados()
 
     def salvar_dados(self): 
         with open('dados.json', 'w') as arqv:

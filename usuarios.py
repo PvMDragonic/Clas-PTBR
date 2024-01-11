@@ -70,7 +70,7 @@ async def atualizar_cargos(bot: commands.Bot, id_disc: int) -> list[str]:
         for (clan_nome, clan_lista) in coletado:
             for pessoa in clan_lista:
                 # Não é a pessoa certa.
-                if nome_sv != pessoa:
+                if not nome_sv in pessoa:
                     continue
 
                 # O cargo da pessoa já tá certo.
@@ -80,13 +80,12 @@ async def atualizar_cargos(bot: commands.Bot, id_disc: int) -> list[str]:
                 cargo_clan = utils.get(bot.guild.roles, name = clan_nome)
                 if not cargo_clan:
                     cargo_clan = await clans_disc.create_role(name = clan)
-                    await membro.add_roles(cargo_clan)
                 else:
                     # O cargo do clã fica sempre em último na lista de cargos da pessoa.
                     cargo_a_remover = min(membro.roles, key = lambda role: role.position)
                     await membro.remove_roles(cargo_a_remover)
-                    await membro.add_roles(cargo_clan)
 
+                await membro.add_roles(cargo_clan)
                 membro_encontrado = True
                 break
 
