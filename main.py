@@ -2,11 +2,7 @@ from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
 from datetime import datetime
-<<<<<<< HEAD
 from asyncio import sleep
-=======
-from time import sleep
->>>>>>> 018db68 (Correções menores.)
 import discord
 
 from dados import Servidor
@@ -70,13 +66,17 @@ async def validar_nome(message):
         cargo_clan = await DISC_CLANS.create_role(name = clan)
         await AUTOR.add_roles(cargo_clan)
 
-    if rank in ('Owner', 'Deputy Owner', 'Overseer', 'Coordinator'):
-        # Cargo de 'Líder de Clã'.
-        await AUTOR.add_roles(DISC_CLANS.get_role(721503125822898226))
-
     membros_mesmo_clan = [member for member in DISC_CLANS.members if cargo_clan in member.roles]
+
+    if rank in ('Owner', 'Deputy Owner', 'Overseer', 'Coordinator'):
+        cargo_lider = await DISC_CLANS.get_role(375692963248078848)
+        quantia_lideres = [member for member in membros_mesmo_clan if member.role == cargo_lider]
+        if config_disc.quantia_lideres > len(quantia_lideres):
+            # Cargo de 'Líder de Clã'.
+            await AUTOR.add_roles(DISC_CLANS.get_role(375692963248078848))
+
     cargo_votar = await DISC_CLANS.get_role(721503125822898226)
-    pessoa_para_votar = [member for member in membros_mesmo_clan if discord.utils.get(member.roles, name = cargo_votar)]
+    pessoa_para_votar = [member for member in membros_mesmo_clan if member.role == cargo_votar]
     if not pessoa_para_votar:
         para_votar.add(AUTOR)
         await message.channel.send(
@@ -97,6 +97,8 @@ async def enviar_comandos(message):
 
     comandos = [
         ("@Clãs PT-BR membros", "O bot envia uma lista com os nomes daqueles que estão com o cargo de clã incorreto, seja porque mudaram de clã ou de nome.\n᲼᲼"),
+        ("@Clãs PT-BR lideres [número]", "Define um limite de líderes de clã para um único clã. \
+            Ao atingir o limite definido, novos membros daquele clã (mesmo que tenham cargo alto) não receberão o cargo de líder.\n᲼᲼"),
     ]
 
     for cmd, descricao in comandos:
@@ -105,6 +107,15 @@ async def enviar_comandos(message):
     embed.set_footer(text = "OBS.: Não usar [ ] nos comandos; é apenas para demonstrar os parâmetros.")
 
     await message.channel.send(embed = embed)
+
+@bot.command()
+async def lideres(ctx, *args):
+    config_disc.quantos_lideres = args[0]
+    config_disc.salvar_dados()
+
+    await ctx.message.channel.send(
+        f"O número máximo de líderes de clã por clã foi alterado para `{config_disc.quantos_lideres}`! {ctx.message.author.mention}"
+    )
 
 @bot.command()
 async def membros(ctx):

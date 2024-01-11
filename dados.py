@@ -9,6 +9,7 @@ class Servidor():
         except FileNotFoundError:
             self.msg_bem_vindos = ""
             self.sem_atualizar = []
+            self.quantos_lideres = 0
             self.tempo_loop = 0
             self.token = ""
             self.salvar_dados()
