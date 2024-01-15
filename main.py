@@ -6,7 +6,7 @@ from asyncio import sleep
 import discord
 
 from dados import Servidor
-from usuarios import buscar_clan, atualizar_cargos
+from usuarios import buscar_clan, atualizar_cargos, buscar_blacklist
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -37,6 +37,11 @@ async def validar_nome(message):
     if AUTOR.user.roles:
         return
     
+    if config_disc.verificar_bl:
+        meliantes = await buscar_blacklist()
+        if any(nome in meliantes for nome in [AUTOR.name, AUTOR.display_name, message.content]):
+            return await message.channel.send(f'O seu nome consta na black-list dos clãs. Entre em contato com alguém da moderação para resolver este problema! {AUTOR.mention}')
+
     # 'message.content' é para ser o RSN da pessoa, dito por ela mesma.
     clan, rank = await buscar_clan(message.content)
     if not clan:
@@ -99,6 +104,7 @@ async def enviar_comandos(message):
         ("@Clãs PT-BR membros", "O bot envia uma lista com os nomes daqueles que estão com o cargo de clã incorreto, seja porque mudaram de clã ou de nome.\n᲼᲼"),
         ("@Clãs PT-BR lideres [número]", "Define um limite de líderes de clã para um único clã. \
             Ao atingir o limite definido, novos membros daquele clã (mesmo que tenham cargo alto) não receberão o cargo de líder.\n᲼᲼"),
+        ("@Clãs PT-BR blacklist", "Ativa/desativa a verificação de nomes listados na black-list dos clãs na hora da identificação.\n᲼᲼"),
     ]
 
     for cmd, descricao in comandos:
@@ -122,6 +128,15 @@ async def membros(ctx):
     nomes = '\n'.join(config_disc.sem_atualizar)
     await ctx.message.channel.send(
         f"A seguir estão o(s) nome(s) daquele(s) cujo cargo de clã está(ão) errado(s) {ctx.message.author.mention}:\n\n{nomes}"
+    )
+
+@bot.command()
+async def blacklist(ctx):
+    config_disc.verificar_bl = not config_disc.verificar_bl
+    config_disc.salvar_dados()
+
+    await ctx.message.channel.send(
+        f"A verificação de meliantes da black-list dos clãs foi `{'ativada' if config_disc.verificar_bl else 'desativada'}`! {ctx.message.author.mention}"
     )
 
 @bot.event

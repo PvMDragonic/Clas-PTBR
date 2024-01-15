@@ -7,6 +7,7 @@ class Servidor():
                 # Cria os atributos da classe com base no que tem no json.
                 self.__dict__.update(json.load(arqv))
         except FileNotFoundError:
+            self.verificar_bl = False
             self.msg_bem_vindos = ""
             self.sem_atualizar = []
             self.quantos_lideres = 0

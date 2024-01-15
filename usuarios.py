@@ -3,6 +3,8 @@ from discord import utils
 from time import sleep
 import requests
 import psycopg2
+import html
+import re
 
 def nomes_clans() -> list:
     """
@@ -126,6 +128,27 @@ async def buscar_clan(nome: str) -> list[str] | None:
                         return [clan, rank]
             
         return None
+    except Exception as erro:
+        print(erro)
+        return None
+    
+async def buscar_blacklist() -> set[str] | None:
+    """
+    Retorna os nomes que constam na Black-list dos clãs.
+
+    Retorna:
+        set: 
+            Conjunto de nomes dos meliantes.
+        None:
+            Caso aconteça algum erro durante o scrap.
+    """
+
+    try:
+        black_list = 'https://docs.google.com/spreadsheets/d/1_laGspB1mbFGOkXBuGLS3ZWk4QXe69mt'
+        requisicao = requests.get(black_list).content
+        conteudo = html.fromstring(requisicao)
+        linhas = conteudo.xpath('.//td')
+        return set(re.sub(r"\([^()]*\)", "", nome).strip() for elem in linhas for nome in elem.text_content().split("-"))
     except Exception as erro:
         print(erro)
         return None
