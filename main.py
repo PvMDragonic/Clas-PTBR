@@ -1,4 +1,3 @@
-from discord.ext.commands.errors import MissingRequiredArgument, BadArgument
 from discord.ext.commands import CommandNotFound
 from discord.ext import commands
 from datetime import datetime
@@ -6,6 +5,7 @@ from asyncio import sleep
 import discord
 
 from dados import Servidor
+from logger import Logger
 from usuarios import buscar_clan, atualizar_cargos, buscar_blacklist
 
 intents = discord.Intents.default()
@@ -25,6 +25,7 @@ async def loop_semanal(tempo: int):
         config_disc.sem_atualizar = await atualizar_cargos(bot, ID_DISC)
         config_disc.tempo_loop = tempo = int(datetime.timestamp(datetime.now()))
         config_disc.salvar_dados()
+        Logger.adicionar('Loop semanal concluído.')
 
 async def validar_nome(message):
     # Nomes no rune só vão até 12 caracteres.
@@ -90,8 +91,8 @@ async def validar_nome(message):
 
     # Cargo de 'Ativos'.
     await AUTOR.add_roles(DISC_CLANS.get_role(375666393758040065))
-
     await AUTOR.edit(nick = message.content)
+    Logger.adicionar(f'{AUTOR.name} entrou pelo clã {clan}.')
 
 async def enviar_comandos(message):
     embed = discord.Embed(
@@ -118,11 +119,13 @@ async def enviar_comandos(message):
 
 @bot.command()
 async def lideres(ctx, *args):
-    config_disc.quantos_lideres = args[0]
+    quantos = args[0]
+    config_disc.quantos_lideres = quantos
     config_disc.salvar_dados()
+    Logger.adicionar(f'Limite de líderes por clã atualizado para {quantos} por {ctx.message.author.name}')
 
     await ctx.message.channel.send(
-        f"O número máximo de líderes de clã por clã foi alterado para `{config_disc.quantos_lideres}`! {ctx.message.author.mention}"
+        f"O número máximo de líderes de clã por clã foi alterado para `{quantos}`! {ctx.message.author.mention}"
     )
 
 @bot.command()
@@ -137,8 +140,11 @@ async def blacklist(ctx):
     config_disc.verificar_bl = not config_disc.verificar_bl
     config_disc.salvar_dados()
 
+    status = 'ativada' if config_disc.verificar_bl else 'desativada'
+    Logger.adicionar(f'Verificação da black-list {status} por {ctx.message.author.name}.')
+
     await ctx.message.channel.send(
-        f"A verificação de meliantes da black-list dos clãs foi `{'ativada' if config_disc.verificar_bl else 'desativada'}`! {ctx.message.author.mention}"
+        f"A verificação de meliantes da black-list dos clãs foi `{status}`! {ctx.message.author.mention}"
     )
 
 @bot.command()
@@ -158,10 +164,15 @@ async def teste(ctx):
 
 @bot.event
 async def on_member_join(member):
+    Logger.adicionar(f'Usuário {member.name} entrou para o servidor.')
     if config_disc.enviar_boas_vindas:
         await bot.get_guild(ID_DISC).get_channel(ID_BOASVINDAS).send(
             config_disc.boas_vindas(member.mention)
         )
+
+@bot.event
+async def on_member_remove(member):
+    Logger.adicionar(f'Usuário {member.name} deixou o servidor.')
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -169,6 +180,8 @@ async def on_command_error(ctx, error):
         return await ctx.message.channel.send(
             f"Esse comando não existe! {ctx.message.author.mention}"
         )
+    if isinstance(error, discord.Forbidden):
+        pass
     raise error
 
 @bot.event
@@ -205,7 +218,8 @@ async def on_message(message):
                 cargo_votar = await bot.get_guild(ID_DISC).get_role(721503125822898226)
                 AUTOR.add_roles(cargo_votar)
                 para_votar.remove(AUTOR)
-                
+
+                Logger.adicionar(f'{AUTOR} recebeu cargo para votar.')
                 await message.channel.send(
                     f'Você foi colocado como responsável por votar em nome de seu clã, {AUTOR.mention}!'
                 )
