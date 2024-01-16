@@ -105,6 +105,8 @@ async def enviar_comandos(message):
         ("@Clãs PT-BR lideres [número]", "Define um limite de líderes de clã para um único clã. \
             Ao atingir o limite definido, novos membros daquele clã (mesmo que tenham cargo alto) não receberão o cargo de líder.\n᲼᲼"),
         ("@Clãs PT-BR blacklist", "Ativa/desativa a verificação de nomes listados na black-list dos clãs na hora da identificação.\n᲼᲼"),
+        ("@Clãs PT-BR boasvindas", "Atualiza a mensagem de boas-vindas para quem entrar no servidor. Use `{}` para indicar onde a marcação da pessoa deve ficar na mensagem.\n᲼᲼"),
+        ("@Clãs PT-BR teste", "Testa a mensagem de boas-vindas, enviando-a como se a pessoa tivesse acabado de entrar.\n᲼᲼"),
     ]
 
     for cmd, descricao in comandos:
@@ -137,6 +139,21 @@ async def blacklist(ctx):
 
     await ctx.message.channel.send(
         f"A verificação de meliantes da black-list dos clãs foi `{'ativada' if config_disc.verificar_bl else 'desativada'}`! {ctx.message.author.mention}"
+    )
+
+@bot.command()
+async def boasvindas(ctx, *args):
+    config_disc.msg_bem_vindos = " ".join(args)
+    config_disc.salvar_dados()
+
+    await ctx.message.channel.send(
+        f"A mensagem de boas-vindas foi atualizada; use `@Clãs PT-BR teste` para testar como ela ficou! {ctx.message.author.mention}"
+    )
+
+@bot.command()
+async def teste(ctx):
+    await ctx.message.channel.send(
+        config_disc.boas_vindas(ctx.message.author.mention)
     )
 
 @bot.event
@@ -173,7 +190,7 @@ async def on_ready():
     await loop_semanal(restante)
 
 @bot.event
-async def on_message(message):            
+async def on_message(message): 
     if message.author.bot:
         return
 
