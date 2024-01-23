@@ -106,7 +106,7 @@ async def enviar_comandos(message):
         ("@Clãs PT-BR lideres [número]", "Define um limite de líderes de clã para um único clã. \
             Ao atingir o limite definido, novos membros daquele clã (mesmo que tenham cargo alto) não receberão o cargo de líder.\n᲼᲼"),
         ("@Clãs PT-BR blacklist", "Ativa/desativa a verificação de nomes listados na black-list dos clãs na hora da identificação.\n᲼᲼"),
-        ("@Clãs PT-BR boasvindas", "Atualiza a mensagem de boas-vindas para quem entrar no servidor. Use `{}` para indicar onde a marcação da pessoa deve ficar na mensagem.\n᲼᲼"),
+        ("@Clãs PT-BR boasvindas [mensagem]", "Atualiza a mensagem de boas-vindas para quem entrar no servidor. Use `{}` para indicar onde a marcação da pessoa deve ficar na mensagem.\n᲼᲼"),
         ("@Clãs PT-BR teste", "Testa a mensagem de boas-vindas, enviando-a como se a pessoa tivesse acabado de entrar.\n᲼᲼"),
     ]
 
@@ -149,7 +149,13 @@ async def blacklist(ctx):
 
 @bot.command()
 async def boasvindas(ctx, *args):
-    config_disc.msg_bem_vindos = " ".join(args)
+    mensagem = " ".join(args)
+    if not mensagem:
+        return await ctx.message.channel.send(
+            f"Você não inseriu uma mensagem válida para as boas-vindas! {ctx.message.author.mention}"
+        )
+
+    config_disc.msg_bem_vindos = mensagem
     config_disc.salvar_dados()
 
     await ctx.message.channel.send(
@@ -158,6 +164,11 @@ async def boasvindas(ctx, *args):
 
 @bot.command()
 async def teste(ctx):
+    if not config_disc.msg_bem_vindos:
+        return await ctx.message.channel.send(
+            'Não há mensagem de boas-vindas definida. Use `@Clãs PT-BR boasvindas [mensagem]` para definir uma mensagem de boas-vindas.'
+        )
+
     await ctx.message.channel.send(
         config_disc.boas_vindas(ctx.message.author.mention)
     )
@@ -165,7 +176,7 @@ async def teste(ctx):
 @bot.event
 async def on_member_join(member):
     Logger.adicionar(f'Usuário {member.name} entrou para o servidor.')
-    if config_disc.enviar_boas_vindas:
+    if config_disc.msg_bem_vindos:
         await bot.get_guild(ID_DISC).get_channel(ID_BOASVINDAS).send(
             config_disc.boas_vindas(member.mention)
         )
